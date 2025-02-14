@@ -11,6 +11,7 @@ def create_db():
     # Create table if it doesn't exist
     # Columns:
     # id (TEXT, primary key, not null, post id)
+    # author (TEXT, not null, the author of the post ([deleted] if the user no longer exists))
     # subreddit (TEXT, not null, subreddit of the post)
     # title (TEXT, not null, title of post)
     # content (TEXT, content of post)
@@ -24,6 +25,7 @@ def create_db():
         """
         CREATE TABLE IF NOT EXISTS posts (
             id TEXT PRIMARY KEY,
+            author TEXT NOT NULL,
             subreddit TEXT NOT NULL,
             title TEXT NOT NULL,
             content TEXT,
@@ -46,8 +48,8 @@ def insert_or_update_post(post):
 
     cursor.execute(
         """
-        INSERT INTO posts (id, subreddit, title, content, score, num_comments, created_utc, upvote_ratio, used)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO posts (id, author, subreddit, title, content, score, num_comments, created_utc, upvote_ratio, used)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             score = excluded.score,
             num_comments = excluded.num_comments,
@@ -55,6 +57,7 @@ def insert_or_update_post(post):
         """,
         (
             post['id'],
+            post['author'],
             post['subreddit'],
             post['title'],
             post.get('content', None),
