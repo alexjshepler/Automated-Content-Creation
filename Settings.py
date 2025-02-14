@@ -159,6 +159,7 @@ def validate_settings(settings):
     settings['subreddits'] = validate_subreddits(settings['subreddits'], settings['reddit'])
     
     print("Settings validated successfully!\n")
+    return settings
 
 # Validate that each subreddit exists
 def validate_subreddits(subreddits, reddit_credentials):
