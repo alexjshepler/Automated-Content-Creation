@@ -118,6 +118,23 @@ def get_all_posts(fetch_method):
     conn.close()
     return posts
 
+# Get a random post in database
+def get_random_AITAH_post():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM posts WHERE subreddit = ? ORDER BY RANDOM() LIMIT 1
+        """,
+        ('AITAH',)
+    )
+
+    post = cursor.fetchone()
+    conn.close()
+
+    return post
+
 # Mark a post as used
 def mark_post_used(post_id):
     conn = sql.connect(DB_NAME)
