@@ -1,6 +1,7 @@
 import sqlite3 as sql
 
 DB_NAME = "posts.db"
+PODCAST_DB_NAME = 'podcast.db'
 
 
 # Create the database and the 'posts' table if it doesn't exist
@@ -33,6 +34,37 @@ def create_db():
             num_comments INTEGER,
             created_utc REAL,
             upvote_ratio REAL,
+            used BOOLEAN DEFAULT FALSE
+        )
+        """
+    )
+    
+    conn.commit()
+    conn.close()
+
+def create_podcast_db():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    # Create table if it doesn't exist
+    # Columns:
+    # id (TEXT, primary key, not null, post id)
+    # author (TEXT, not null, the author of the post ([deleted] if the uesr no longer exists))
+    # subreddit (TEXT, not null, subreddit of the post)
+    # title (TEXT, not null, title of post)
+    # content (TEXT, content of post)
+    # script (TEXT, script that gets generated)
+    # used (BOOLEAN, default false, true if used and false if not used)
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS scripts (
+            id TEXT PRIMARY KEY,
+            author TEXT NOT NULL,
+            subreddit TEXT NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT,
+            script TEXT,
             used BOOLEAN DEFAULT FALSE
         )
         """
