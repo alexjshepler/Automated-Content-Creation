@@ -100,9 +100,44 @@ def insert_or_update_post(post):
             False
         )
     )
-    
+
     conn.commit()
     conn.close()
+
+
+# Insert a new script
+def insert_script(post_id, post_subreddit, post_author, post_title, post_content, script):
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+            # id TEXT PRIMARY KEY,
+            # author TEXT NOT NULL,
+            # subreddit TEXT NOT NULL,
+            # title TEXT NOT NULL,
+            # content TEXT,
+            # script TEXT,
+            # used BOOLEAN DEFAULT FALSE
+
+
+    cursor.execute(
+        """
+        INSERT INTO scripts (id, author, subreddit, title, content, script, used)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            post_id,
+            post_author,
+            post_subreddit,
+            post_title,
+            post_content,
+            script,
+            False,
+        ),
+    )
+
+    conn.commit()
+    conn.close()
+
 
 def get_fetch_method(fetch_method):
     if fetch_method == 'top':
@@ -150,6 +185,36 @@ def get_all_posts(fetch_method):
     conn.close()
     return posts
 
+# Get all AITAH posts in database
+def get_all_AITAH_posts():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM posts WHERE subreddit = ?
+        """,
+        ('AITAH',)
+    )
+
+    posts = cursor.fetchall()
+    conn.close()
+
+    return posts
+
+# Check if post is in podcast database
+def is_post_in_podcast_db(content):
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM scripts WHERE content = ?",(content,))
+
+    posts = cursor.fetchall()
+    conn.close()
+    
+    return len(posts) > 0
+
+
 # Get a random post in database
 def get_random_AITAH_post():
     conn = sql.connect(DB_NAME)
@@ -166,6 +231,23 @@ def get_random_AITAH_post():
     conn.close()
 
     return post
+
+# Get a random post in database
+def get_first_unused_script():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT * FROM scripts WHERE used = ?
+        """,
+        (False,),
+    )
+
+    script = cursor.fetchone()
+    conn.close()
+
+    return script
 
 # Mark a post as used
 def mark_post_used(post_id):
