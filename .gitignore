@@ -2,6 +2,7 @@
 settings.json
 posts.db
 *.wav
+*.onnx
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
