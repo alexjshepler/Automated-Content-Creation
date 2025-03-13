@@ -1,6 +1,7 @@
 # Project Specific
 settings.json
 posts.db
+*.wav
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
