@@ -31,15 +31,33 @@ def load_settings():
         json.dump(settings, file, indent=4)
         
     return settings
-    
+
 def prompt_for_settings():
     settings = {}
-    
+
     print('========== Getting Settings ==========')
-    
-    client_id, client_secret, username, subreddits = prompt_reddit()
-    groq_api, model = prompt_reddit()
+
+    client_id, client_secret, username, subreddits, min_words, min_comments = (
+        prompt_reddit()
+    )
+    groq_api, model = prompt_groq()
     elevenlabs_api, model_1, model_2 = prompt_elevenlabs()
+
+    settings = {
+        'reddit': {
+            'api': {
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'username': username
+            },
+            'subreddits': subreddits,
+            'min_words': min_words,
+            'min_comments': min_comments
+        }
+    }
+
+    settings = validate_settings(settings)
+
 
 def prompt_reddit():
     print('===== Reddit Settings\n')
@@ -72,10 +90,36 @@ def prompt_reddit():
     client_secret = input('Enter the app secret: ')
     username = input('Enter your Reddit username: ')
 
+    # Get the minimum amount of words for the post
+    while True:
+        user_input = input('Enter the minimum amount of words for the post: ')
+        
+        try:
+            min_words = int(user_input)
+            if min_words >= 0:
+                break
+            else:
+                print("Please enter a number greater than 0")
+        except:
+            print("Please enter a number")
+
+    # Get the minimum amount of comments on a post
+    while True:
+        user_input = input('Enter the minimum amount of comments for the post: ')
+        
+        try:
+            min_comments = int(user_input)
+            if min_comments >= 0:
+                break
+            else:
+                print('Please enter a number greater than 0')
+        except:
+            print('Please enter a number')
+
     # Collect subreddits
     subreddits = prompt_subreddits()
     
-    return client_id, client_secret, username, subreddits
+    return client_id, client_secret, username, subreddits, min_words, min_comments
 
 def prompt_subreddits():
     subreddits = []
@@ -113,15 +157,15 @@ def prompt_subreddits():
         print(f'\t- {i}')
         
     return subreddits
-    
-def prompt_llm():
+
+def prompt_groq():
     print('===== Groq Settings')
     
     groq_api = input('Please enter your Groq api key: ')
     model = input('Please enter the model you want to use: ')
     
     return groq_api, model
-    
+
 
 def prompt_elevenlabs():
     print('===== Elevenlabs Settings')
@@ -134,13 +178,60 @@ def prompt_elevenlabs():
 
 
 def validate_settings(settings):
-    pass
+    print('========== Validating Settings ==========')
 
-def validate_reddit(client_id, client_secret, username, subreddits):
-    pass
+    # Reddit Settings
+    reddit_settings = settings.get('reddit', {})
+    reddit_api_settings = reddit_settings.get('api', {})
 
-def validate_llm(is_local, groq_api, model):
-    pass
+    client_id = reddit_api_settings.get('client_id')
+    client_secret = reddit_api_settings.get("client_secret")
+    username = reddit_api_settings.get("username")
+    subreddits = reddit_settings.get("subreddits")
+    min_words = reddit_settings.get("min_words")
+    min_comments = reddit_settings.get("min_comments")
+
+    client_id, client_secret, username, subreddits, min_words, min_comments = validate_reddit(client_id, client_secret, username, subreddits, min_words, min_comments)
+    groq_api, model = validate_groq(groq_api, model)
+    elevenlabs_api, model_1, model_2 = validate_elevenlabs(elevenlabs_api, model_1, model_2)
+
+
+def validate_reddit(client_id, client_secret, username, subreddits, min_words, min_comments):
+    isValid = False
+    
+    while not isValid:
+        try:
+            reddit = praw.Reddit(
+                client_id=client_id,
+                client_secret=client_secret,
+                username=username,
+                user_agent="RedditAppValidator",
+            )
+
+            print(reddit.info())
+            isValid = True
+        except:
+            print('Error: Reddit settings are invalid or missing')
+
+            client_id, client_secret, username, subreddits, min_words, min_comments = prompt_reddit()
+            
+    
+    valid_subreddits = []
+    
+    for sub in subreddits:
+        if sub:
+            try:
+                reddit.subreddit(sub).id
+                valid_subreddits.append(sub)
+                print(f'Valid subreddit: {sub}')
+            except Exception as ex:
+                print("Warning: Subreddit '{sub}' is invalid. Error: {ex}")
+    
+    return client_id, client_secret, username, valid_subreddits, min_words, min_comments
+
+
+def validate_groq(groq_api, model):
+    return groq_api, model
 
 def validate_elevenlabs(elevenlabs_api, model_1, model_2):
-    pass
+    return elevenlabs_api, model_1, model_2

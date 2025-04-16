@@ -1,0 +1,22 @@
+{
+    "reddit": {
+        "api": {
+            "client_id": "client_id",
+            "client_secret": "client_secret",
+            "username": "username"
+        },
+        "subreddits": [
+            "subreddits"
+        ],
+        "min_words": 100
+    },
+    "groq": {
+        "api_key": "api_key",
+        "model": "model"
+    },
+    "elevenlabs": {
+        "api_key": "api_key",
+        "host_voice_1": "host_voice",
+        "host_voice_2": "host_voice"
+    }
+}
