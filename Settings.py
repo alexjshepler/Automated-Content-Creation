@@ -1,4 +1,7 @@
 import praw # Reddit api
+import ollama
+from groq import Groq
+from elevenlabs.client import ElevenLabs
 import json
 
 SETTINGS_PATH = './settings.json'
@@ -37,9 +40,7 @@ def prompt_for_settings():
 
     print('========== Getting Settings ==========')
 
-    client_id, client_secret, username, subreddits, min_words, min_comments = (
-        prompt_reddit()
-    )
+    client_id, client_secret, username, subreddits, min_words, min_comments = prompt_reddit()
     groq_api, model = prompt_groq()
     elevenlabs_api, model_1, model_2 = prompt_elevenlabs()
 
@@ -53,14 +54,25 @@ def prompt_for_settings():
             'subreddits': subreddits,
             'min_words': min_words,
             'min_comments': min_comments
+        },
+        'groq': {
+            'api_key': groq_api,
+            'model': model
+        },
+        'elevenlabs': {
+            'api_key': elevenlabs_api,
+            'model_1': model_1,
+            'model_2': model_2
         }
     }
 
     settings = validate_settings(settings)
+    
+    return settings
 
 
 def prompt_reddit():
-    print('===== Reddit Settings\n')
+    print('\n===== Reddit Settings\n')
     
     print("First, go to: https://www.reddit.com/prefs/apps\n")
     
@@ -124,7 +136,7 @@ def prompt_reddit():
 def prompt_subreddits():
     subreddits = []
     
-    print('----- Subreddits')
+    print('\n----- Subreddits')
     print("You can enter subreddit names or linkes, separated by commas, or enter one subreddit at a time")
     print("To stop, type '!q' or just press enter on an empty line")
     
@@ -159,7 +171,7 @@ def prompt_subreddits():
     return subreddits
 
 def prompt_groq():
-    print('===== Groq Settings')
+    print('\n\n===== Groq Settings')
     
     groq_api = input('Please enter your Groq api key: ')
     model = input('Please enter the model you want to use: ')
@@ -191,9 +203,36 @@ def validate_settings(settings):
     min_words = reddit_settings.get("min_words")
     min_comments = reddit_settings.get("min_comments")
 
+    # # Groq Settings
+    groq_settings = settings.get('groq', {})
+
+    groq_api = groq_settings.get('api_key')
+    model = groq_settings.get('model')
+
     client_id, client_secret, username, subreddits, min_words, min_comments = validate_reddit(client_id, client_secret, username, subreddits, min_words, min_comments)
     groq_api, model = validate_groq(groq_api, model)
-    elevenlabs_api, model_1, model_2 = validate_elevenlabs(elevenlabs_api, model_1, model_2)
+    # elevenlabs_api, model_1, model_2 = validate_elevenlabs(elevenlabs_api, model_1, model_2)
+
+    settings = {
+        "reddit": {
+            "api": {
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "username": username,
+            },
+            "subreddits": subreddits,
+            "min_words": min_words,
+            "min_comments": min_comments,
+        },
+        "groq": {"api_key": groq_api, "model": model},
+        "elevenlabs": {
+            "api_key": 'temp', # TODO: Implement elevenlabs
+            "model_1": 'temp', # TODO: Implement elevenlabs
+            "model_2": 'temp', # TODO: Implement elevenlabs
+        },
+    }
+    
+    return settings
 
 
 def validate_reddit(client_id, client_secret, username, subreddits, min_words, min_comments):
@@ -208,10 +247,10 @@ def validate_reddit(client_id, client_secret, username, subreddits, min_words, m
                 user_agent="RedditAppValidator",
             )
 
-            print(reddit.info())
+            reddit.subreddit('AITAH').id
             isValid = True
-        except:
-            print('Error: Reddit settings are invalid or missing')
+        except Exception as ex:
+            print(f'Error: Reddit settings are invalid or missing. {ex}')
 
             client_id, client_secret, username, subreddits, min_words, min_comments = prompt_reddit()
             
@@ -229,7 +268,7 @@ def validate_reddit(client_id, client_secret, username, subreddits, min_words, m
     
     return client_id, client_secret, username, valid_subreddits, min_words, min_comments
 
-
+# TODO
 def validate_groq(groq_api, model):
     return groq_api, model
 
