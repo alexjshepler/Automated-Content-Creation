@@ -83,4 +83,66 @@ def insert_post(post):
     conn.close()
     
 def insert_script(script):
-    pass
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO scripts (id, author, subreddit, title, content, script, has_audio)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (script['id'], script['author'], script['subreddit'], script['title'], script['content'], script['script'], False)
+        )
+    
+    conn.commit()
+    conn.close()
+
+def get_unused_posts():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        """
+        SELECT * FROM posts WHERE has_script = ?
+        """, (False,)
+    )
+    
+    posts = cursor.fetchall()
+    conn.close()
+    
+    return posts
+
+def get_unused_scripts():
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        """
+        SELECT * FROM scripts WHERE has_audio = ?
+        """, (False,)
+    )
+
+def set_has_script(id):
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        """
+        UPDATE posts SET has_script = TRUE WHERE id = ?
+        """, (id,)
+    )
+    
+    conn.commit()
+    conn.close()
+
+def set_has_audio(id):
+    conn = sql.connect(DB_NAME)
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        """
+        UPDATE scripts SET has_audio = TRUE WHERE id = ?
+        """, (id,)
+    )
+    
+    conn.close()
+    conn.commit()
